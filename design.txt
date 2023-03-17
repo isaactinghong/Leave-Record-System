@@ -1,0 +1,137 @@
+I want to give you some background first, and then I will ask you questions. 
+
+Design of the Leave Record System (Excel VBA)
+If I ask you for code later, don't give me python but VBA code please.
+
+Worksheet: Leave Records 
+- Leave records for all employees
+
+Worksheet: Employee Profiles
+- All employee profiles with:
+	- employeeId
+	- employee name
+	- employmentStartDate
+ 	- Initial carry-over leaves as of excelCreateDate: InitialCarryOver
+	- YearsWorked as of excelCreateDate
+
+Worksheet: HR Policy
+	Leave Entitlement Chart
+	The leaves entitled for the employee are 10 days for the first two years. 
+	and then increment a day year after a year, until it reaches 18 days in tenth year
+	e.g. Years served: Leaves entitled
+	1: 10
+	2: 10
+	3: 11
+	4: 12
+	...
+	10: 18
+	
+	Carry-over Rule
+	Remaining prorata leaves can be all be carried over to next ALPeriod for subsequent certain months only
+	carryOverMonths = 4
+	so the subsequent no. of months is 4.
+	
+Worksheet: Meta Data
+	Excel Create Date: 2023-05-30
+	
+	
+Leave Entry Form
+- Input
+	employee name or employeeId
+	leaves to apply. a list of dates (e.g. 2023-09-07, 2023-09-08, 2023-09-11, 2023-09-12)
+- Two buttons:
+	check remaining leaves
+		- input: targetLeavesToApply
+		- validate if the employee have enough leaves to apply
+			 - call calculateALPeriodLeavesForEmployee to find out
+				- show the result of the calculation: 
+					remainingLeavesInCarryOverPeriod
+					remainingLeavesAfterCarryOverPeriod
+				- otherwise, warning message should have been shown
+	submit
+	- add all the leaves to Leave Records
+- Output
+
+
+Form to check leaves available as of a target date
+- Inputs
+	Employee name
+	targetDate, default as today if leave empty
+- Output
+	within active ALPeriod of the targetDate
+		- Output the active ALPeriod's startDate and endDate
+		- How many leaves left
+			if targetDate is in carry over period: remainingLeavesInCarryOverPeriod
+			otherwise: remainingLeavesAfterCarryOverPeriod
+		- Taken how many leaves
+			List the dates
+		
+Function name: calculateALPeriodLeavesForEmployee
+Inputs:
+	- employeeId
+	- leavesToApply. a list of dates (e.g. 2023-09-07, 2023-09-08, 2023-09-11, 2023-09-12)
+
+- list the leaves taken within ALPeriod
+	ALPeriodLeavesTaken. a list of dates (e.g. 2023-01-16, 2023-01-17, 2023-01-18)
+- ALPeriodCombinedLeaves = concatLists(ALPeriodLeavesTaken, leavesToApply)
+
+- set:
+	carryOverLeavesApplied = 0
+	prorataLeavesApplied = 0
+	remainingLeavesInCarryOverPeriod = 0
+	remainingLeavesAfterCarryOverPeriod = 0
+- see if current date is past the beginning Carry-over Period
+	- for each ALPeriodCombinedLeaves: ALPeriodCombinedLeave
+		carryOverLeaves = carryOverLeavesOfCertainDate(ALPeriodCombinedLeave)
+		prorataLeaves = prorataLeavesOfCertainDate(ALPeriodCombinedLeave)
+		
+		if the leave is in Carry-over period:
+			if (carryOverLeavesApplied < carryOverLeaves)
+				carryOverLeavesApplied++
+			else if (prorataLeavesApplied < prorataLeaves)
+				prorataLeavesApplied++
+			else 
+				Show Warning. No more available leaves
+				break
+		
+	- remaining leaves after Carry-over Period
+		output: remainingLeavesAfterCarryOverPeriod
+		= prorataLeaves-prorataLeavesApplied
+	- remaining leaves in Carry-over Period
+		output: remainingLeavesInCarryOverPeriod
+		= (carryOverLeaves-carryOverLeavesApplied)+remainingLeavesAfterCarryOverPeriod
+- outputs:
+	remainingLeavesInCarryOverPeriod
+	remainingLeavesAfterCarryOverPeriod
+	
+Function name: prorataLeavesOfTargetDate()
+- input:
+	employeeId
+	targetDate
+- prorata calculation is as such
+	- if the employee's entited leaves for the ALPeriod is 15, each month the employee gains 15/12 = 1.25 leaves
+		- e.g. if targetDate falls in the third month of the ALPeriod, employee has 1.25*3=3.75.
+	- round down the gained prorata leaves. e.g. 3.75 becomes 3. 
+	- the result is the output
+		
+- output: prorataLeaves (e.g. 3)
+
+Function name: carryOverLeavesOfTargetDate()
+- input:
+	employeeId
+	targetDate
+- process:
+	
+	if targetDate is after the ALPeriod's carryover period
+		return 0
+	
+	if targetDate is in first ever ALPeriod of the employee
+		return initialCarryOver
+	
+	call calculateALPeriodLeavesForEmployee of last ALPeriod
+	get the remainingLeavesAfterCarryOverPeriod out of the result array
+	because remainingLeavesAfterCarryOverPeriod of the last ALPeriod is the carry over leaves from last year
+		
+	return remainingLeavesAfterCarryOverPeriod;
+	
+- output: carryOverLeaves

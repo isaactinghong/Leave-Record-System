@@ -1,0 +1,34 @@
+Sure! Here are the steps to create an Excel Leave Record System and apply the code provided:
+
+1. Open Microsoft Excel and create a new workbook.
+2. Rename the default Worksheet 1 to "Leave Records" by double-clicking on the tab name at the bottom of the screen and typing in the new name.
+3. Add the following headers to the first row of the Leave Records sheet: "Employee ID", "Start Date", "End Date", and "Leave Type".
+4. In the second row of the Leave Records sheet, add a sample leave record for testing purposes. 
+For example, "101" in column A for the employee ID, 
+"2021-01-01" in column B for the start date, 
+"2021-01-05" in column C for the end date, and 
+"Vacation" in column D for the leave type.
+5. Create a new worksheet and name it "Employee Profiles".
+6. Add the following headers to the first row of the Employee Profiles sheet: "Employee ID", "Start Date", "Initial Carry-Over Leaves".
+7. In the second row of the Employee Profiles sheet, 
+add a sample employee profile for testing purposes. 
+For example, "101" in column A for the employee ID, 
+"2020-01-01" in column B for the start date, 
+and "10" in column C for the initial carry-over leaves.
+8. Create a new worksheet and name it "HR Policy".
+9. Add the following headers to the first row of the HR Policy sheet: 
+"Year", "Leave Entitlement Rule", "Carry-Over Rule".
+10. In the second row of the HR Policy sheet, 
+add the leave entitlement and carry-over rules for each year. 
+For example, "2021" in column A for the year, 
+"10" in column B for the leave entitlement rule, 
+and "4 months" in column C for the carry-over rule.
+11. Open the Visual Basic Editor by pressing "Alt + F11" on your keyboard.
+12. In the Visual Basic Editor, insert a new module by clicking on "Insert" from the top menu and selecting "Module".
+13. Copy and paste the code for the `calculateALPeriodLeavesForEmployee()` function into the new module.
+14. Insert another new module by clicking on "Insert" from the top menu and selecting "Module".
+15. Copy and paste the code for the `carryOverLeavesOfCertainDate()` function into the new module.
+16. Insert a third new module by clicking on "Insert" from the top menu and selecting "Module".
+17. Copy and paste the code for the `prorataLeavesOfCertainDate()` function into the new module.
+18. Save the workbook as a macro-enabled workbook (.xlsm) to ensure that the code is saved with the workbook.
+19. Test the Leave Record System by clicking on the "Check Remaining Leaves" button or the "Submit" button in the Leave Entry Form that you created.

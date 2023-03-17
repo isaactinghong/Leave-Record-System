@@ -1,0 +1,177 @@
+Here is a sample code for the `calculateALPeriodLeavesForEmployee()` function that you can use as a reference. Please note that this is just a sample code and may require modifications to fit your specific implementation:
+
+```
+Function calculateALPeriodLeavesForEmployee(empId As Integer, Optional leavesToApply As Integer) As Variant
+
+    ' Get the relevant data from Employee Profile sheet
+    Dim startDate As Date
+    Dim initialCarryOver As Integer
+    Dim activeYearStart As Date
+    Dim activeYearEnd As Date
+    Dim currentALPeriod As String
+    Dim row As Integer
+    Dim lastRow As Integer
+    
+    Set EmployeeProfile = Sheets("Employee Profiles")
+    lastRow = EmployeeProfile.Cells(Rows.Count, "A").End(xlUp).Row
+    
+    For row = 2 To lastRow
+        If EmployeeProfile.Cells(row, 1) = empId Then
+            startDate = EmployeeProfile.Cells(row, 2).Value
+            initialCarryOver = EmployeeProfile.Cells(row, 3).Value
+            activeYearStart = DateSerial(Year(Now()), Month(startDate), Day(startDate))
+            activeYearEnd = DateSerial(Year(Now()) + 1, Month(startDate), Day(startDate) - 1)
+            currentALPeriod = activeYearStart & " - " & activeYearEnd
+            
+            Exit For
+        End If
+    Next row
+    
+    ' Get the relevant data from HR Policy sheet
+    Dim leaveEntitlementRule As Variant
+    Dim carryOverRule As Variant
+    
+    Set HRPolicy = Sheets("HR Policy")
+    leaveEntitlementRule = Application.WorksheetFunction.VLookup(Year(activeYearStart), HRPolicy.Range("B:C"), 2, False)
+    carryOverRule = Application.WorksheetFunction.VLookup(Year(activeYearStart), HRPolicy.Range("D:E"), 2, False)
+    
+    ' Get the data from Leave Records sheet
+    Dim ALPeriodLeavesTaken As Integer
+    Dim ALPeriodCombinedLeaves As Integer
+    
+    Set LeaveRecords = Sheets("Leave Records")
+    lastRow = LeaveRecords.Cells(Rows.Count, "A").End(xlUp).Row
+    
+    For row = 2 To lastRow
+        If LeaveRecords.Cells(row, 1) = empId And LeaveRecords.Cells(row, 2) >= activeYearStart And LeaveRecords.Cells(row, 2) <= activeYearEnd Then
+            ALPeriodLeavesTaken = ALPeriodLeavesTaken + DateDiff("d", LeaveRecords.Cells(row, 2), LeaveRecords.Cells(row, 3)) + 1
+        End If
+    Next row
+    
+    ALPeriodCombinedLeaves = ALPeriodLeavesTaken + leavesToApply
+    
+    ' Calculate remaining leaves in carry-over period and after carry-over period
+    Dim carryOverLeaves As Integer
+    Dim prorataLeaves As Integer
+    Dim carryOverLeavesApplied As Integer
+    Dim prorataLeavesApplied As Integer
+    Dim RemainingLeavesInCarryOverPeriod As Integer
+    Dim RemainingLeavesAfterCarryOverPeriod As Integer
+    
+    carryOverLeaves = carryOverLeavesOfCertainDate(empId, activeYearStart)
+    prorataLeaves = Round((leaveEntitlementRule / 365) * (activeYearEnd - startDate))
+    
+    If DateDiff("m", startDate, activeYearStart) >= 4 Then
+        RemainingLeavesAfterCarryOverPeriod = prorataLeaves - ALPeriodCombinedLeaves
+    Else
+        For i = 1 To ALPeriodCombinedLeaves
+            If DateDiff("m", startDate, activeYearStart) + CInt(i / leaveEntitlementRule) >= 4 Then
+                Exit For
+            ElseIf carryOverLeavesApplied < carryOverLeaves Then
+                carryOverLeavesApplied = carryOverLeavesApplied + 1
+            ElseIf prorataLeavesApplied < prorataLeaves Then
+                prorataLeavesApplied = prorataLeavesApplied + 1
+            Else
+                MsgBox "No more available leaves"
+                Exit For
+            End If
+        Next i
+        RemainingLeavesInCarryOverPeriod = (carryOverLeaves - carryOverLeavesApplied) + (prorataLeaves - prorataLeavesApplied)
+        RemainingLeavesAfterCarryOverPeriod = prorataLeaves - RemainingLeavesInCarryOverPeriod - ALPeriodLeavesTaken
+    End If
+    
+    ' Output remaining leaves
+    Dim result As Variant
+    
+    result = Array(RemainingLeavesInCarryOverPeriod, RemainingLeavesAfterCarryOverPeriod)
+    calculateALPeriodLeavesForEmployee = result
+
+End Function
+```
+
+And here is a sample code for the `carryOverLeavesOfCertainDate()` function, which also depends on the `calculateALPeriodLeavesForEmployee()` function:
+
+```
+Function carryOverLeavesOfCertainDate(empId As Integer, certainDate As Date) As Integer
+
+    ' Get the employee's AL period for the given date
+    Dim activeYearStart As Date
+    Dim lastYearEnd As Date
+    Dim currentALPeriod As String
+    Dim row As Integer
+    Dim lastRow As Integer
+    
+    Set EmployeeProfile = Sheets("Employee Profiles")
+    lastRow = EmployeeProfile.Cells(Rows.Count, "A").End(xlUp).Row
+    
+    For row = 2 To lastRow
+        If EmployeeProfile.Cells(row, 1) = empId Then
+            activeYearStart = DateSerial(Year(certainDate), Month(EmployeeProfile.Cells(row, 2)), Day(EmployeeProfile.Cells(row, 2)))
+            lastYearEnd = DateSerial(Year(activeYearStart) - 1, Month(EmployeeProfile.Cells(row, 2)), Day(EmployeeProfile.Cells(row, 2))) - 1
+            currentALPeriod = lastYearEnd & " - " & activeYearStart
+            
+            Exit For
+        End If
+    Next row
+    
+    ' Calculate remaining leaves in carry-over period
+    Dim remainingLeaves As Variant
+    
+    remainingLeaves = calculateALPeriodLeavesForEmployee(empId)
+    
+    If certainDate > DateSerial(Year(certainDate), Month(activeYearStart) + 4, Day(activeYearStart) - 1) Then
+        carryOverLeavesOfCertainDate = 0
+    ElseIf certainDate < lastYearEnd Then
+        carryOverLeavesOfCertainDate = EmployeeProfile.Cells(row, 3)
+    ElseIf certainDate >= activeYearStart Then
+        carryOverLeavesOfCertainDate = remainingLeaves(1)
+    Else
+        carryOverLeavesOfCertainDate = Round(EmployeeProfile.Cells(row, 3) / 365 * DateDiff("d", lastYearEnd, certainDate))
+    End If
+
+End Function
+```
+
+Again, please note that these are just sample codes and may not work exactly as is for your specific implementation. You may need to modify them to fit your specific requirements.
+
+
+Sure! Here's a sample code for the `prorataLeavesOfCertainDate()` function:
+
+```
+Function prorataLeavesOfCertainDate(empId As Integer, certainDate As Date) As Integer
+
+    ' Get the relevant data from Employee Profile sheet
+    Dim startDate As Date
+    Dim activeYearStart As Date
+    Dim activeYearEnd As Date
+    Dim lastRow As Integer
+    
+    With Sheets("Employee Profiles")
+        lastRow = .Cells(Rows.Count, 1).End(xlUp).Row
+        For i = 2 To lastRow
+            If .Cells(i, 1).Value = empId Then
+                startDate = .Cells(i, 2).Value
+                activeYearStart = DateSerial(Year(certainDate), Month(startDate), Day(startDate))
+                activeYearEnd = DateSerial(Year(certainDate) + 1, Month(startDate), Day(startDate) - 1)
+                Exit For
+            End If
+        Next i
+    End With
+    
+    ' Get the relevant data from HR Policy sheet
+    Dim leaveEntitlementRule As Integer
+    
+    With Sheets("HR Policy")
+        lastRow = .Cells(Rows.Count, 2).End(xlUp).Row
+        For i = 2 To lastRow
+            If .Cells(i, 2).Value = Year(activeYearStart) Then
+                leaveEntitlementRule = .Cells(i, 3).Value
+                Exit For
+            End If
+        Next i
+    End With
+    
+    ' Calculate the prorata leaves based on the employment start date and the active year start and end dates
+    prorataLeavesOfCertainDate = Round((leaveEntitlementRule / 365) * (activeYearEnd - startDate))
+  
+End Function

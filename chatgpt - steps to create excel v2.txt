@@ -1,0 +1,86 @@
+To implement the Leave Record System in Excel, you can follow these steps:
+
+1. Create a new Excel workbook and add four worksheets: Leave Records, Employee Profiles, HR Policy, and Meta Data.
+2. In the Employee Profiles worksheet, create columns for Employee Id, Employee Name, Employment Start Date, Initial Carry-Over Leaves, and Years Worked.
+3. In the HR Policy worksheet, create a table for the Leave Entitlement Chart and the Carry-over Rule.
+4. In the Leave Records worksheet, create columns for Employee Id, Employee Name, Leave Start Date, Leave End Date, and Leave Type.
+5. In the Meta Data worksheet, create a cell (e.g. A1) for Excel Create Date and input the date information.
+6. Create the Leave Entry Form and the Form to Check Leaves Available as of a Target Date using VBA.
+7. Add the VBA code into the Excel workbook.
+8. Populate Employee Profiles with data for the relevant employee, including Initial Carry-Over Leaves and Employment Start Date.
+9. Add data to the Leave Records worksheet for the relevant employee, spanning over 5 years.
+10. Test the system by submitting leave and checking remaining leaves available.
+
+Here's some testing data for one employee:
+
+Employee Id: 10001
+Employee Name: John Smith
+Employment Start Date: 2018-01-01
+Initial Carry-Over Leaves: 6
+Years Worked: 5
+
+Leave Records:
+
+| Employee Id | Employee Name | Leave Start Date | Leave End Date | Leave Type |
+|-------------|---------------|-----------------|---------------|------------|
+| 10001 | John Smith | 2018-04-02 | 2018-04-05 | AL |
+| 10001 | John Smith | 2018-06-26 | 2018-06-27 | CL |
+| 10001 | John Smith | 2018-11-19 | 2018-11-23 | AL |
+| 10001 | John Smith | 2019-03-25 | 2019-03-29 | AL |
+| 10001 | John Smith | 2019-08-26 | 2019-08-27 | CL |
+| 10001 | John Smith | 2019-12-23 | 2019-12-31 | AL |
+| 10001 | John Smith | 2020-01-02 | 2020-01-03 | CL |
+| 10001 | John Smith | 2020-04-13 | 2020-04-17 | AL |
+| 10001 | John Smith | 2020-10-26 | 2020-10-30 | AL |
+| 10001 | John Smith | 2021-02-15 | 2021-02-19 | AL |
+| 10001 | John Smith | 2021-05-17 | 2021-05-18 | CL |
+| 10001 | John Smith | 2021-09-20 | 2021-09-24 | AL |
+| 10001 | John Smith | 2022-02-07 | 2022-02-11 | AL |
+| 10001 | John Smith | 2022-06-21 | 2022-06-22 | CL |
+| 10001 | John Smith | 2022-11-14 | 2022-11-18 | AL |
+| 10001 | John Smith | 2023-01-23 | 2023-01-23 | CL |
+| 10001 | John Smith | 2023-04-03 | 2023-04-07 | AL |
+| 10001 | John Smith | 2023-10-16 | 2023-10-20 | AL |
+| 10001 | John Smith | 2024-02-05 | 2024-02-09 | AL |
+| 10001 | John Smith | 2024-05-06 | 2024-05-07 | CL |
+| 10001 | John Smith | 2024-09-09 | 2024-09-13 | AL |
+| 10001 | John Smith | 2025-02-10 | 2025-02-14 | AL |
+| 10001 | John Smith | 2025-06-27 | 2025-06-27 | CL |
+| 10001 | John Smith | 2025-11-20 | 2025-11-24 | AL |
+| 10001 | John Smith | 2026-03-31 | 2026-04-03 | AL |
+| 10001 | John Smith | 2026-08-03 | 2026-08-04 | CL |
+| 10001 | John Smith | 2026-12-07 | 2026-12-11 | AL |
+| 10001 | John Smith | 2027-02-19 | 2027-02-19 | CL |
+| 10001 | John Smith | 2027-04-12 | 2027-04-16 | AL |
+| 10001 | John Smith | 2027-10-25 | 2027-10-29 | AL |
+| 10001 | John Smith | 2028-02-14 | 2028-02-18 | AL |
+
+Note: This is just an example of testing data, please adjust accordingly.
+
+
+Sure, here are more details on point 3 and point 6:
+
+Point 3: In the HR Policy worksheet, create a table for the Leave Entitlement Chart and the Carry-over Rule.
+
+- To create a table for the Leave Entitlement Chart, you can create two columns: Years Served and Leaves Entitled. Enter the appropriate values for each year according to the HR policy. You can use the example in the background information to create the table.
+
+- To create the Carry-over Rule, you can create a cell (e.g. A1) and label it "Carry-over Months". Underneath it, you can enter the number of months allowed for carry-over (in this case, four).
+
+Point 6: Create the Leave Entry Form and the Form to Check Leaves Available as of a Target Date using VBA.
+
+- To create the Leave Entry Form, you can create a UserForm with the following components:
+  - Label or ComboBox for Employee Name or Employee Id (depending on how you want to search for the employee)
+  - ListBox or Calendar for selecting the Leave Start Date and Leave End Date
+  - Button for checking remaining leaves
+  - Button for submitting leave
+  - Messagebox for displaying errors or confirming successful submission
+
+- To create the Form to Check Leaves Available as of a Target Date, you can create a UserForm with the following components:
+  - Label or ComboBox for Employee Name or Employee Id (depending on how you want to search for the employee)
+  - TextBox or Calendar for selecting the Target Date
+  - Label for displaying the Active ALPeriod's Start Date and End Date
+  - Label for displaying the Remaining Leaves Left in the active ALPeriod (taking into account Carry-over Period)
+  - ListBox for displaying the dates/times that leave has been taken in the active ALPeriod
+
+- For both forms, you can use VBA code to populate the employee and target date selection fields based on the data in the Employee Profiles worksheet and the current system date (in the case of the Form to Check Leaves Available as of a Target Date).
+You can also use VBA code to validate the input, calculate the remaining leaves and display the results.

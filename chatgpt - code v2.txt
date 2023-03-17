@@ -1,0 +1,182 @@
+Function calculateALPeriodLeavesForEmployee(employeeId As Integer, leavesToApply As List(Of Date)) As Variant 
+
+    Dim employeeProfileSheet As Worksheet, policySheet As Worksheet, leaveRecordSheet As Worksheet
+    Dim employeeProfileRange As Range, policyRange As Range, leaveRecordRange As Range
+    Dim employeeProfileList As List, policyList As List, leaveRecordList As List
+    Dim currentDate As Date, activePeriodStart As Date, activePeriodEnd As Date, 
+    Dim totalAllowedLeaves As Integer, proratedLeaves As Integer, carryOverLeaves As Integer
+    Dim carryOverLeavesApplied As Integer, prorataLeavesApplied As Integer, 
+    Dim remainingLeavesInCarryOverPeriod As Integer, remainingLeavesAfterCarryOverPeriod As Integer
+    
+    Set employeeProfileSheet = ThisWorkbook.Sheets("Employee Profiles")
+    Set policySheet = ThisWorkbook.Sheets("HR Policy")
+    Set leaveRecordSheet = ThisWorkbook.Sheets("Leave Records")
+    
+    ' Fetch Employee Record from Employee Profiles using the provided employeeId
+    Set employeeProfileRange = employeeProfileSheet.Range("A2:E" & employeeProfileSheet.Cells(Rows.Count, 1).End(xlUp).Row)
+    Set employeeProfileList = New List
+    For Each row In employeeProfileRange.Rows
+        employeeProfileList.AddItem Array(row.Cells(1), row.Cells(2), row.Cells(3), row.Cells(4), row.Cells(5))
+    Next row
+    
+    ' Find the record of the employee with the provided employeeId
+    Dim employeeProfile As Variant
+    For Each employeeProfile in employeeProfileList
+        If employeeProfile(0) = employeeId Then
+            Exit For
+        End If
+    Next employeeProfile
+    
+    ' Get Active Leave Period of the Employee that includes the current date
+    currentDate = Date
+    activePeriodStart = employeeProfile(3)
+    Do Until activePeriodStart > currentDate
+        activePeriodStart = DateAdd("YYYY", 1, activePeriodStart)
+    Loop
+    activePeriodEnd = DateAdd("YYYY", -1, activePeriodStart)
+    
+    ' Get the total leaves allowed in the current leave period using HR Policy Sheet
+    Set policyRange = policySheet.Range("A2:B11")
+    Set policyList = New List
+    For Each row In policyRange.Rows
+        policyList.AddItem Array(row.Cells(1), row.Cells(2))
+    Next row
+    
+    ' Find the total allowed leaves for the current leave period based on the years worked
+    Dim yearsDiff As Long
+    yearsDiff = Year(activePeriodStart) - Year(employeeProfile(3))
+    totalAllowedLeaves = policyList(yearsDiff)(1)
+    
+    ' Calculate Prorated Leaves for the current leave period for Employee
+    proratedLeaves = totalAllowedLeaves / 12 * Month(DateDiff("M", activePeriodStart, currentDate))
+
+    ' Calculate Carry Over Leaves for the current leave period for Employee
+    If currentDate <= DateAdd("m", 4, activePeriodEnd) Then
+        carryOverLeaves = employeeProfile(4)
+    Else
+        carryOverLeaves = 0
+    End If
+    
+    ' Check if Employee has enough leave balance by subtracting Applied leaves from total leaves of the leave period
+    Set leaveRecordRange = leaveRecordSheet.Range("A2:F" & leaveRecordSheet.Cells(Rows.Count, 1).End(xlUp).Row)
+    Set leaveRecordList = New List
+    For Each row in leaveRecordRange.Rows
+        leaveRecordList.AddItem Array(row.Cells(1), row.Cells(2), row.Cells(3), row.Cells(4), row.Cells(5), row.Cells(6))
+    Next row
+    
+    Dim appliedLeave As Date
+    For Each appliedLeave in leavesToApply
+        ' Check if leave is within current leave period and available for the employee
+        If appliedLeave >= activePeriodStart And appliedLeave <= activePeriodEnd And _
+        remainingLeavesInCarryOverPeriod + remainingLeavesAfterCarryOverPeriod > 0 Then
+            ' Check if leave is taken from Carry Over Leaves
+            If appliedLeave <= DateAdd("m", 4, activePeriodEnd) And carryOverLeavesApplied < carryOverLeaves Then
+                carryOverLeavesApplied = carryOverLeavesApplied + 1
+            ' Check if leave is taken from Prorated Leaves
+            ElseIf appliedLeave > DateAdd("m", 4, activePeriodEnd) And prorataLeavesApplied < proratedLeaves Then
+                prorataLeavesApplied = prorataLeavesApplied + 1
+            ' Show warning if no more available leaves
+            Else
+                MsgBox ("Warning: No more available leaves")
+                Exit Function
+            End If
+        End If
+    Next appliedLeave
+    
+    ' Calculate the remaining leaves balance in Carry Over Period and beyond
+    remainingLeavesAfterCarryOverPeriod = proratedLeaves - prorataLeavesApplied
+    remainingLeavesInCarryOverPeriod = carryOverLeaves - carryOverLeavesApplied + remainingLeavesAfterCarryOverPeriod
+    
+    ' Update Employee Profiles worksheet with the new Carry Over Leaves balance
+    employeeProfile(4) = remainingLeavesAfterCarryOverPeriod
+    employeeProfileSheet.Range("A" & employeeProfile(0) + 1 & ":E" & employeeProfile(0) + 1).Value = employeeProfile
+    
+    ' Create and return the output Variant Array
+    calculateALPeriodLeavesForEmployee = Array(remainingLeavesInCarryOverPeriod, remainingLeavesAfterCarryOverPeriod)
+
+End Function
+
+
+Function prorataLeavesOfTargetDate(employeeId As Integer, targetDate As Date) As Integer
+
+    Dim employeeProfileSheet As Worksheet, policySheet As Worksheet, employeeProfileRange As Range, policyRange As Range
+    Dim employeeProfileList As List, policyList As List
+    Dim currentDate As Date, activePeriodStart As Date, activePeriodEnd As Date
+    Dim totalAllowedLeaves As Integer, yearsDiff As Long, proratedLeaves As Integer
+    
+    Set employeeProfileSheet = ThisWorkbook.Sheets("Employee Profiles")
+    Set policySheet = ThisWorkbook.Sheets("HR Policy")
+    
+    ' Fetch Employee Record from Employee Profiles using the provided employeeId
+    Set employeeProfileRange = employeeProfileSheet.Range("A2:E" & employeeProfileSheet.Cells(Rows.Count, 1).End(xlUp).Row)
+    Set employeeProfileList = New List
+    For Each row In employeeProfileRange.Rows
+        employeeProfileList.AddItem Array(row.Cells(1), row.Cells(2), row.Cells(3), row.Cells(4), row.Cells(5))
+    Next row
+    
+    ' Find the record of the employee with the provided employeeId
+    Dim employeeProfile As Variant
+    For Each employeeProfile in employeeProfileList
+        If employeeProfile(0) = employeeId Then
+            Exit For
+        End If
+    Next employeeProfile
+    
+    ' Get Active Leave Period of the Employee that includes the targetDate
+    currentDate = targetDate
+    activePeriodStart = employeeProfile(3)
+    Do Until activePeriodStart > currentDate
+        activePeriodStart = DateAdd("yyyy", 1, activePeriodStart)
+    Loop
+    activePeriodEnd = DateAdd("yyyy", -1, activePeriodStart)
+    
+    ' Get the total leaves allowed in the current leave period using HR Policy Sheet
+    Set policyRange = policySheet.Range("A2:B11")
+    Set policyList = New List
+    For Each row In policyRange.Rows
+        policyList.AddItem Array(row.Cells(1), row.Cells(2))
+    Next row
+        
+    ' Find the total allowed leaves for the current leave period based on the years worked
+    yearsDiff = Year(activePeriodStart) - Year(employeeProfile(3))
+    totalAllowedLeaves = policyList(yearsDiff)(1)
+    
+    ' Calculate Prorated Leaves for the current leave period for Employee
+    proratedLeaves = Int((totalAllowedLeaves / 12) * (Month(currentDate) - Month(activePeriodStart) + 1))
+    
+    ' Return the prorata leaves
+    prorataLeavesOfTargetDate = proratedLeaves
+
+End Function
+
+
+Function carryOverLeavesOfTargetDate(employeeId As Integer, targetDate As Date) As Integer
+    ' Get the initial carry-over leaves of the employee profile
+    Dim initialCarryOver As Integer
+    initialCarryOver = WorksheetFunction.VLookup(employeeId, Sheets("Employee Profiles").Range("A:E"), 4, False)
+    
+    ' Check if the target date is after the ALPeriod's carryover period
+    Dim carryOverEndDate As Date
+    carryOverEndDate = WorksheetFunction.VLookup("Excel Create Date", Sheets("Meta Data").Range("A:B"), 2, False) + (WorksheetFunction.VLookup(employeeId, Sheets("HR Policy").Range("A:B"), 2, False) - 1) * 365
+    If targetDate > carryOverEndDate Then
+        carryOverLeavesOfTargetDate = 0
+    Else
+        ' Check if the target date is in the first ever ALPeriod of the employee
+        Dim employmentStartDate As Date
+        employmentStartDate = WorksheetFunction.VLookup(employeeId, Sheets("Employee Profiles").Range("A:E"), 3, False)
+        Dim firstALPeriodStartDate As Date
+        firstALPeriodStartDate = employmentStartDate + WorksheetFunction.VLookup(employeeId, Sheets("HR Policy").Range("A:B"), 2, False)
+        If targetDate < firstALPeriodStartDate Then
+            carryOverLeavesOfTargetDate = initialCarryOver
+        Else
+            ' Get the remaining leaves after carry-over period of the last ALPeriod
+            Dim lastALPeriodEndDate As Date
+            lastALPeriodEndDate = carryOverEndDate - WorksheetFunction.VLookup(employeeId, Sheets("HR Policy").Range("A:B"), 2, False) * 365
+            Dim lastALPeriodRemaining As Variant
+            lastALPeriodRemaining = calculateALPeriodLeavesForEmployee(employeeId, Array(lastALPeriodEndDate))(1)
+            
+            ' Return the remaining leaves after carry-over period of the last ALPeriod as the carry-over leaves
+            carryOverLeavesOfTargetDate = lastALPeriodRemaining
+        End If
+    End If
+End Function
