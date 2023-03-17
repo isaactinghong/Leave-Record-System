@@ -77,8 +77,8 @@ Sub generateEmployeeLeaveReport()
 
 
     'Set column width for the new worksheet
-    Worksheets(worksheetName).Columns("A").ColumnWidth = 25
-    Worksheets(worksheetName).Columns("B").ColumnWidth = 15
+    Worksheets(worksheetName).Columns("A").ColumnWidth = 35
+    Worksheets(worksheetName).Columns("B").ColumnWidth = 11
 
     'Write to the new worksheet
     Worksheets(worksheetName).Range("A1").Value = "Employee Name: "
@@ -90,7 +90,7 @@ Sub generateEmployeeLeaveReport()
     Worksheets(worksheetName).Range("A3").Value = "Employment Start Date: "
     Worksheets(worksheetName).Range("B3").Value = employmentStartDate
 
-    Worksheets(worksheetName).Range("A4").Value = "Initial Carry Over: "
+    Worksheets(worksheetName).Range("A4").Value = "Initial Carry-Over Leaves: "
     Worksheets(worksheetName).Range("B4").Value = initialCarryOver
 
     Worksheets(worksheetName).Range("A5").Value = "Years Worked Before Excel Creation: "
