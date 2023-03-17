@@ -1,4 +1,3 @@
-
 Public Function generateBlankWorksheet(worksheetName As String)
 
     On Error Resume Next
@@ -19,11 +18,11 @@ Sub generateEmployeeLeaveReport()
     ActiveWorkbook.Worksheets("Employee Record Generator").Activate
 
     'Read from named cells
-    Dim EmployeeName As Variant
-    EmployeeName = Range("EmployeeName").Value
-    Debug.Print "EmployeeName: " & EmployeeName
+    Dim employeeName As String
+    employeeName = Range("EmployeeName").Value
+    Debug.Print "EmployeeName: " & employeeName
 
-    Dim EmployeeId As Variant
+    Dim EmployeeId As String
     EmployeeId = Range("EmployeeId").Value
     Debug.Print "EmployeeId: " & EmployeeId
 
@@ -42,7 +41,60 @@ Sub generateEmployeeLeaveReport()
     Loop
 
     'Enter the name of the worksheet to be created
-    Dim worksheetName As String: worksheetName = "John"
+    Dim worksheetName As String: worksheetName = employeeName
     generateBlankWorksheet (worksheetName)
+
+    'Get the Employee Profile
+    Dim aEmployeeProfile As Object
+    Set aEmployeeProfile = EmployeeProfile(EmployeeId)
+
+    Dim employmentStartDate As Date, initialCarryOver As Integer, yearsWorkedBeforeExcelCreation As Integer
+    employmentStartDate = aEmployeeProfile("EmploymentStartDate")
+    initialCarryOver = aEmployeeProfile("InitialCarryOver")
+    yearsWorkedBeforeExcelCreation = aEmployeeProfile("yearsWorkedBeforeExcelCreation")
+
+    'Log the employee profile. dict.
+    Debug.Print "---------------------------------"
+    Debug.Print "Employee Profile: "
+    Debug.Print "EmployeeId: " & EmployeeId
+    Debug.Print "EmployeeName: " & employeeName
+    Debug.Print "EmploymentStartDate: " & employmentStartDate
+    Debug.Print "InitialCarryOver: " & initialCarryOver
+    Debug.Print "yearsWorkedBeforeExcelCreation: " & yearsWorkedBeforeExcelCreation
+
+    'Get the Meta Data
+    Dim excelCreateDate As Variant
+    excelCreateDate = MetaData("Excel Create Date")
+    Debug.Print "---------------------------------"
+    Debug.Print "ExcelCreateDate: " & excelCreateDate
+
+
+    'Get the Leave Entitlement Policy
+    'Dim leaves As Variant
+    'leaves = LeaveEntitlementPolicy(8)
+    'Debug.Print "---------------------------------"
+    'Debug.Print "LeaveEntitlementPolicy 8 years: " & leaves
+
+
+    'Set column width for the new worksheet
+    Worksheets(worksheetName).Columns("A").ColumnWidth = 25
+    Worksheets(worksheetName).Columns("B").ColumnWidth = 15
+
+    'Write to the new worksheet
+    Worksheets(worksheetName).Range("A1").Value = "Employee Name: "
+    Worksheets(worksheetName).Range("B1").Value = employeeName
+
+    Worksheets(worksheetName).Range("A2").Value = "Employee ID: "
+    Worksheets(worksheetName).Range("B2").Value = EmployeeId
+
+    Worksheets(worksheetName).Range("A3").Value = "Employment Start Date: "
+    Worksheets(worksheetName).Range("B3").Value = employmentStartDate
+
+    Worksheets(worksheetName).Range("A4").Value = "Initial Carry Over: "
+    Worksheets(worksheetName).Range("B4").Value = initialCarryOver
+
+    Worksheets(worksheetName).Range("A5").Value = "Years Worked Before Excel Creation: "
+    Worksheets(worksheetName).Range("B5").Value = yearsWorkedBeforeExcelCreation
+
 
 End Sub
